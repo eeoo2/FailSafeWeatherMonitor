@@ -27,3 +27,26 @@ catch (Exception ex)
     // Fångar allt annat, till exempel om databasen inte går att nå
     Console.WriteLine($"Importen misslyckades: {ex.Message}");
 }
+
+var api = new WeatherApiService();
+
+try
+{
+    var apiResult = await api.FetchAndSaveAsync();
+    var p = apiResult.Point;
+
+    if (p is null)
+        Console.WriteLine("Hittade ingen mätning för den aktuella timmen.");
+    else if (apiResult.Saved)
+        Console.WriteLine($"Sparade: {p.StationName} {p.Timestamp:yyyy-MM-dd HH:mm}, {p.Temperature} °C, {p.Humidity} %");
+    else
+        Console.WriteLine("Mätningen för den här timmen finns redan.");
+}
+catch (HttpRequestException)
+{
+    Console.WriteLine("Kunde inte nå väder-API:et. Kontrollera internetanslutningen.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"API-anropet misslyckades: {ex.Message}");
+}

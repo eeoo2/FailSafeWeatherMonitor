@@ -1,8 +1,13 @@
-﻿using FailSafe_Weather_Monitor.Models;
+﻿using FailSafe_Weather_Monitor.Data;
+using FailSafe_Weather_Monitor.Models;
 using System.Globalization;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace FailSafe_Weather_Monitor.Services;
+
+// Resultat av ett API-anrop: mätningen som hämtades och om den sparades
+public record ApiResult(WeatherDataPoint? Point, bool Saved);
 
 public class WeatherApiService
 {
@@ -45,5 +50,25 @@ public class WeatherApiService
             Humidity = humidity.Value,
             DataSource = "API"
         };
+    }
+    public async Task<ApiResult> FetchAndSaveAsync()
+    {
+        var point = await GetCurrentWeatherAsync();
+
+        if (point is null)
+            return new ApiResult(null, false);
+
+        await using var db = new WeatherDbContext();
+
+        bool exists = await db.WeatherDataPoints.AnyAsync(w =>
+            w.StationName == point.StationName && w.Timestamp == point.Timestamp);
+
+        if (exists)
+            return new ApiResult(point, false);
+
+        await db.WeatherDataPoints.AddAsync(point);
+        await db.SaveChangesAsync();
+
+        return new ApiResult(point, true);
     }
 }

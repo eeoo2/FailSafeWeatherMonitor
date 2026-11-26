@@ -17,5 +17,5 @@ catch (Exception ex)
 
 string filePath = Path.Combine(AppContext.BaseDirectory, "weather_data.csv");
 
-var menu = new Menu(new FileImportService(), new WeatherApiService(), filePath);
+var menu = new Menu(new FileImportService(), new WeatherApiService(), new WeatherStatsService(), filePath);
 await menu.RunAsync();

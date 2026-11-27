@@ -12,10 +12,14 @@ public class WeatherDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
+            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+
             // Läs anslutningssträngen från appsettings.json (inte hårdkodad!)
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false)
+                // Läs även appsettings.Production.json när appen körs mot Azure
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
                 .Build();
 
             var connectionString = config.GetConnectionString("DefaultConnection");
